@@ -8,7 +8,7 @@ schema:
   author:
     - 陳皆曲 <jachuchen@yahoo.com>
     - 佛振 <chen.sst@gmail.com>
-    - 參考許式鍵盤設計
+    - 參考許氏鍵盤設計
   description: |
     注音符號輸入，採用「忘形26」（倚天26）鍵盤排列，輸出傳統中文字形。
 
