@@ -1,0 +1,282 @@
+# Rime schema
+# encoding: utf-8
+
+schema:
+  schema_id: bopomofo_et26
+  name: 得意注音
+  version: "1"
+  author:
+    - 陳皆曲 <jachuchen@yahoo.com>
+    - 佛振 <chen.sst@gmail.com>
+    - 參考許式鍵盤設計
+  description: |
+    注音符號輸入，採用「忘形26」（倚天26）鍵盤排列，輸出傳統中文字形。
+
+    本方案採用「無模式」設計，以1234567890或上下方向鍵、回車鍵選詞；
+    空格鍵輸入第一聲，標記爲「ˉ」,以 dfjq 輸入聲調「ˊˇˋ˙」 Enter候選字上屏
+
+  dependencies:
+    - cangjie5
+
+switches:
+  - name: ascii_mode
+    states: ["中文", "英文"]
+  - name: full_shape
+    states: ["半型", "全型"]
+  - name: simplification
+    states: ["繁體", "簡體"]
+  - name: zh_tw
+    reset: 1
+    # 啓用opencc字形轉換，但不在選單中顯示
+
+engine:                  # 輸入引擎設定，即掛接組件的「處方」
+  processors:            # 一、這批組件處理各類按鍵消息
+    - ascii_composer     # ※ 處理西文模式及中西文切換
+    - recognizer         # ※ 與 matcher 搭配，處理符合特定規則的輸入碼，如網址、反查等  
+    - key_binder         # ※ 在特定條件下將按鍵綁定到其他按鍵，如重定義逗號、句號爲候選翻頁鍵
+    - speller            # ※ 拼寫處理器，接受字符按鍵，編輯輸入碼
+    - punctuator         # ※ 句讀處理器，將單個字符按鍵直接映射爲文字符號
+    - selector           # ※ 選字處理器，處理數字選字鍵、上、下候選定位、換頁鍵
+    - navigator          # ※ 處理輸入欄內的光標移動鍵
+    - fluency_editor     # ※ 句式編輯器，用於以空格斷詞、回車上屏的【注音】、【語句流】等輸入方案，替換 express_editor，也可以寫作 fluency_editor
+  segmentors:            # 二、這批組件識別不同內容類型，將輸入碼分段
+    - ascii_segmentor    # ※ 標識西文段落
+    - matcher            # ※ 標識符合特定規則的段落，如網址、反查等
+    - abc_segmentor      # ※ 標識常規的文字段落
+    - punct_segmentor    # ※ 標識句讀段落
+    - fallback_segmentor # ※ 標識其他未標識段落
+  translators:           # 三、這批組件翻譯特定類型的編碼段爲一組候選文字
+    - echo_translator    # ※ 沒有其他候選字時，回顯輸入碼
+    - punct_translator   # ※ 轉換標點符號
+    - r10n_translator
+    - reverse_lookup_translator # ※ 反查翻譯器，用另一種編碼方案查碼
+  filters:               # 四、這批組件過濾翻譯的結果
+    - simplifier         # ※ 繁簡轉換
+    - uniquifier         # ※ 過濾重複的候選字，有可能來自繁簡轉換
+
+menu:
+  alternative_select_keys: "1234567890"
+  
+speller:
+  alphabet: 'abcdefghijklmnopqrstuvwxyz '
+  initials: 'abcdefghijklmnopqrstuvwxyz'
+  finals: " "
+  delimiter: "'"
+  use_space: true
+  algebra:
+    - erase/^xx$/
+    - xform/^m(\d)$/mu$1/  # 呣
+    - xform/^r5$/er5/  # 〜兒
+    - xform/iu/iou/
+    - xform/ui/uei/
+    - xform/ong/ung/
+    - xform/^yi?/i/
+    - xform/^wu?/u/
+    - xform/iu/v/
+    - xform/^([jqx])u/$1v/
+    - xform/([iuv])n/$1en/
+    - xform/^zhi?/Z/
+    - xform/^chi?/C/
+    - xform/^shi?/S/
+    - xform/^([zcsr])i/$1/
+    - xform/ai/A/
+    - xform/ei/I/
+    - xform/ao/O/
+    - xform/ou/U/
+    - xform/ang/K/
+    - xform/eng/G/
+    - xform/an/M/
+    - xform/en/N/
+    - xform/er/R/
+    - xform/eh/E/
+    - xform/([iv])e/$1E/
+    - 'xform/1$/ /'
+    # - abbrev/^([bpmfdtnlgkhjqxZCSrzcs]).+$/$1/
+    # - abbrev/^([A-Za-z]+)\d$/$1/
+    # - abbrev/^([bpmfdtnlgkhjqxZCSrzcs]).+(\d)$/$1$2/
+    - 'xlit|bpmfdtnlgkhjqxZCSrzcsiuvaoeEAIOUMNKGR12345|bpmfdtnlvkhgvcgycjqwsexuaorwiqzpmntlh fjkd|'
+                                                       
+translator:
+  dictionary: terra_pinyin
+  prism: bopomofo_et26
+  spelling_hints: 4
+  preedit_format:
+    - xform/b/ㄅ/
+    - xform/p([exuaoriqzpmnth])/ㄆ$1/
+    - xform/m([exuaoriqzpmnth])/ㄇ$1/
+    - xform/(^|[ '])f/ㄈ/
+    - xform/(^|[ '])d/ㄉ/
+    - xform/t([exuaoriqzpmnth])/ㄊ$1/
+    - xform/n([exuaoriqzpmnth])/ㄋ$1/
+    - xform/(^|[ '])l/ㄌ/
+    - xform/(^|[ '])v/ㄍ/
+    - xform/(^|[ '])k/ㄎ/
+    - xform/h([exuaoriqzpmnth])/ㄏ$1/
+    - xform/(^|[ '])g([eu])/ㄐ$2/
+    - xform/(^|[ '])v([eu])/ㄑ$2/
+    - xform/(^|[ '])c([eu])/ㄒ$2/
+    - xform/(^|[ '])g/ㄓ/
+    - xform/y/ㄔ/
+    - xform/(^|[ '])c/ㄕ/
+    - xform/(^|[ '])j/ㄖ/
+    - xform/(^|[ '])q/ㄗ/
+    - xform/(^|[ '])w/ㄘ/
+    - xform/s/ㄙ/
+    - xform/e/ㄧ/
+    - xform/u/ㄩ/
+    - xform/x/ㄨ/
+    - xform/a/ㄚ/
+    - xform/o/ㄛ/
+    - xform/r/ㄜ/
+    - xform/w/ㄝ/
+    - xform/i/ㄞ/
+    - xform/q/ㄟ/
+    - xform/z/ㄠ/
+    - xform/p/ㄡ/
+    - xform/m/ㄢ/
+    - xform/n/ㄣ/
+    - xform/t/ㄤ/
+    - xform/l/ㄥ/
+    - xform/h/ㄦ/
+    - xform/d/˙/
+    - xform/f/ˊ/
+    - xform/j/ˇ/
+    - xform/k/ˋ/
+    - xform/ /ˉ/
+    - xform/'//
+    - xform/ //
+    #- xlit|'| |
+custom_phrase:
+  dictionary: ""
+  user_dict: custom_phrase
+  db_class: stabledb
+  enable_completion: false
+  enable_sentence: false
+  initial_quality: 1
+
+reverse_lookup:
+  dictionary: cangjie5
+  enable_completion: true
+  prefix: "`"
+  suffix: "'" 
+  tips: 〔倉頡〕
+  preedit_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|"
+  comment_format:
+    - xform/e?r5$/er5/
+    - xform/iu/iou/
+    - xform/ui/uei/
+    - xform/ong/ung/
+    - xform/^yi?/i/
+    - xform/^wu?/u/
+    - xform/iu/v/
+    - xform/^([jqx])u/$1v/
+    - xform/([iuv])n/$1en/
+    - xform/zh/Z/
+    - xform/ch/C/
+    - xform/sh/S/
+    - xform/ai/A/
+    - xform/ei/I/
+    - xform/ao/O/
+    - xform/ou/U/
+    - xform/ang/K/
+    - xform/eng/G/
+    - xform/an/M/
+    - xform/en/N/
+    - xform/er/R/
+    - xform/eh/E/
+    - xform/([iv])e/$1E/
+    - xform/1//
+    - 'xlit|bpmfdtnlgkhjqxZCSrzcsiuvaoeEAIOUMNKGR2345|ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄧㄨㄩㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦˊˇˋ˙|'
+
+simplifier:
+  opencc_config: t2tw.json
+  option_name: zh_tw
+
+punctuator:
+  full_shape:
+    " ": {commit: "　"}
+    "!": {commit: "！"}
+    "\"": {pair: ["“", "”"]}
+    "#": {commit: "#"}
+    "$": ["￥", "$", "€", "£", "¥", "¢", "¤"]
+    "%": ["％", "%", "°", "℃"]
+    "&": ["＆", "&"]
+    "'": {pair: ["‘", "’"]}
+    "(": "（"
+    ")": "）"
+    "*": ["＊", "*", "・", "×", "※", "❂", "·"]
+    "+": ["＋", "+"]
+    .: {commit: "。"}
+    ":": {commit: "："}
+    ";": {commit: "；"}
+    "=": ["＝", "="]
+    "?": {commit: "？"}
+    "@": {commit: "@"}
+    "[": ["「", "【", "《", "〔", "［"]
+    "\\": {commit: "、"}
+    "]": ["」", "】", "》", "〕", "］"]
+    "^": {commit: "……"}
+    _: ["——", "－", "-"]
+    "`": {commit: "`"}
+    "{": ["『", "〖", "〈", "｛"]
+    "|": {commit: "・"}
+    "}": ["』", "〗", "〉", "｝"]
+    "~": {commit: "〜"}
+  half_shape:
+    "!": {commit: "！"}
+    "\"": {pair: ["“", "”"]}
+    "#": {commit: "#"}
+    "$": ["￥", "$", "€", "£", "¥", "¢", "¤"]
+    "%": ["%", "％", "°", "℃"]
+    "&": "&"
+    "'": {pair: ["‘", "’"]}
+    "(": "（"
+    ")": "）"
+    "*": ["*", "＊", "・", "×", "※", "❂", "·"]
+    "+": "+"
+    ",": {commit: "，"}
+    .: {commit: "。"}
+    ":": {commit: "："}
+    ";": {commit: "；"}
+    "=": "="
+    "?": {commit: "？"}
+    "@": {commit: "@"}
+    "[": ["「", "【", "《", "〔", "［"]
+    "\\": {commit: "、"}
+    "]": ["」", "】", "》", "〕", "］"]
+    "^": {commit: "……"}
+    _: ["——", "－", "-"]
+    "`": {commit: "`"}
+    "{": ["『", "〖", "〈", "｛"]
+    "|": {commit: "・"}
+    "}": ["』", "〗", "〉", "｝"]
+    "~": {commit: "〜"}
+
+key_binder:
+  bindings:
+    # Emacs style
+    # - { when: composing, accept: Control+p, send: Up }
+    # - { when: composing, accept: Control+n, send: Down }
+    # - { when: composing, accept: Control+b, send: Left }
+    # - { when: composing, accept: Control+f, send: Right }
+    # - { when: composing, accept: Control+a, send: Home }
+    # - { when: composing, accept: Control+e, send: End }
+    # - { when: composing, accept: Control+d, send: Delete }
+    # - { when: composing, accept: Control+g, send: Escape }
+    # - { when: composing, accept: Alt+v, send: Page_Up }
+    # - { when: composing, accept: Control+v, send: Page_Down }
+    # commonly used paging keys
+    # - { when: composing, accept: ISO_Left_Tab, send: Page_Up }
+    - { when: composing, accept: Shift+Tab, send: Page_Up }
+    - { when: composing, accept: Tab, send: Page_Down }
+    - { when: paging, accept: minus, send: Page_Up }
+    - { when: has_menu, accept: equal, send: Page_Down }
+
+    
+recognizer:
+  patterns:
+    email: "^[a-z][-_.0-9a-z]*@.*$"
+    uppercase: "^[A-Z][-_+.'0-9A-Za-z]*$"
+    url: "^(www[.]|https?:|ftp:|mailto:).*$"
+    reverse_lookup: "`[a-z]*'?$"
